@@ -1,6 +1,13 @@
 from datetime import datetime
 import json
+from typing import Dict, Any
 
+
+def main_info(date_time: str) -> Dict[str, Any]:
+    """главная функция, принимающую на вход строку с датой и временем в формате
+        YYYY-MM-DD HH:MM:SS (2018-05-20 15:30:01) и возвращающую json-ответ
+    """
+    pass
 
 def parse_datetime(dt_str: str) -> datetime:
     """Конвертирует строку в объект datetime."""
