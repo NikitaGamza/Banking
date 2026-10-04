@@ -38,7 +38,7 @@ def main_info(date_time: str) -> Dict[str, Any]:
     data = {
         "greeting": greeting,
         # "cards": cards
-        # "top_transactions": top_transactions
+        "top_transactions": top_transactions,
         "currency_rates": currency_rates,
         "stock_prices": stock_prices,
     }

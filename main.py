@@ -1,4 +1,5 @@
 from src.views import main_info
+from src.services import anylize_cashback
 
 
 # import os
@@ -10,3 +11,5 @@ from src.views import main_info
 
 if __name__ == "__main__":
     print(main_info("2018-05-20 15:30:01"))
+    result_services = anylize_cashback("./data/operations.xlsx", 2018, 3)
+    print(result_services)

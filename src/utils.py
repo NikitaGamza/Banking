@@ -7,7 +7,8 @@ import os
 
 
 URL = "https://api.apilayer.com/exchangerates_data/convert"
-API_KEY = os.getenv("API_KEY")
+API_KEY = "Q6gcDIN8o0fPI1e3DKs4R7nMfgX4V4nZ"
+# API_KEY = os.getenv("API_KEY")
 
 def get_time_for_greeting() -> str:
     """Функция возвращает «Доброе утро» / «Добрый день» /
@@ -122,6 +123,7 @@ def get_currency(path_to_json: str) -> list[dict]:
 
             if status_code == 200:
                 result = response.json()
+                print(result)
                 currency_code_response = result["query"]["from"]
                 currency_amount = round(result["result"], 2)
                 currency_rates.append({
@@ -129,7 +131,7 @@ def get_currency(path_to_json: str) -> list[dict]:
                     "rate": f"{currency_amount}",
                 })
 
-        return currency_rates
+    return currency_rates
 
 
 def get_stock(path_to_json: str) -> list[dict]:
