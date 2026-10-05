@@ -110,15 +110,12 @@ def get_currency(path_to_json: str) -> list[dict]:
         currencies = data['user_currencies']
 
         for currency in currencies:
-            params = {
-                "amount": 1,
-                "from": f"{currency}",
-                "to": "RUB"
-            }
+            params = {"from": f"{currency}", "to": "RUB", "amount": 1}
             headers = {
                 "apiKey": f"{API_KEY}",
             }
-            response = requests.request("GET", URL, headers=headers, data=params)
+            payload = {}
+            response = requests.request("GET", URL, headers=headers, data=payload, params=params)
             status_code = response.status_code
 
             if status_code == 200:

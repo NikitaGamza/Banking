@@ -40,7 +40,7 @@ def main_info(date_time: str) -> Dict[str, Any]:
         # "cards": cards
         "top_transactions": top_transactions,
         "currency_rates": currency_rates,
-        "stock_prices": stock_prices,
+        # "stock_prices": stock_prices,
     }
 
     json_data = json.dumps(data, ensure_ascii=False, indent=4)
