@@ -120,7 +120,6 @@ def get_currency(path_to_json: str) -> list[dict]:
 
             if status_code == 200:
                 result = response.json()
-                print(result)
                 currency_code_response = result["query"]["from"]
                 currency_amount = round(result["result"], 2)
                 currency_rates.append({
