@@ -8,6 +8,8 @@ import os
 
 URL = "https://api.apilayer.com/exchangerates_data/convert"
 API_KEY = "Q6gcDIN8o0fPI1e3DKs4R7nMfgX4V4nZ"
+STOCK_URL = "https://api.marketstack.com/v2/eod"
+STOCK_API = "ddd29bcdcc079c153bc61b8f95a7c69e"
 # API_KEY = os.getenv("API_KEY")
 
 def get_time_for_greeting() -> str:
@@ -138,4 +140,17 @@ def get_stock(path_to_json: str) -> list[dict]:
         stocks = data['user_stocks']
 
         for stock in stocks:
-            pass
+            params = {"access_key": f"{STOCK_API}", "symbols": f"{stock}", "limit": 1}
+            response = requests.request("GET", STOCK_URL, params=params)
+            status_code = response.status_code
+
+            if status_code == 200:
+                result = response.json()
+                stock_code_response = result["data"][0]["symbol"]
+                stock_amount = round(result["data"][0]["open"], 2)
+                stock_rates.append({
+                    "stock": f"{stock_code_response}",
+                    "price": f"{stock_amount}",
+                })
+
+    return stock_rates
