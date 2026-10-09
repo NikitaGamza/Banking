@@ -1,9 +1,9 @@
+import math
 from datetime import datetime
 import pandas as pd
 import requests
 from pandas import DataFrame
 import json
-import os
 
 
 URL = "https://api.apilayer.com/exchangerates_data/convert"
@@ -17,11 +17,11 @@ def get_time_for_greeting() -> str:
         «Добрый вечер» / «Доброй ночи» в зависимости от текущего времени.
     """
     user_datetime_hour = datetime.now().hour
-    if 5 <= user_datetime_hour <= 12:
+    if 6 <= user_datetime_hour <= 12:
         return "Доброе утро"
     elif 12 <= user_datetime_hour <= 18:
         return "Добрый день"
-    elif 18 <= user_datetime_hour <= 24:
+    elif 18 <= user_datetime_hour <= 23:
         return "Добрый вечер"
     else:
         return "Доброй ночи"
@@ -57,25 +57,47 @@ def get_card_with_spend(sorted_df: DataFrame) -> list[dict]:
         Функция принимает DataFrame и возвращает список карт с расходами
     """
     card_spend_transactions = []
-    card_sorted = sorted_df[
-        [
-            "Номер карты",
-            "Сумма операции",
-            "Кэшбэк",
-            "Сумма операции с округлением"
-        ]
-    ]
-    for index, row in card_sorted.iterrows():
-        if row["Сумма операции"] < 0:
-            last_digits = str(row["Номер карты"]).replace("*", "")
-            total_spend = row["Сумма операции с округлением"]
-            cashback = total_spend // 100
-            row = {
-                "last_digits": last_digits,
-                "total_spend": total_spend,
-                "cashback": cashback
-            }
-            card_spend_transactions.append(row)
+
+    card_unique = sorted_df["Номер карты"].unique()
+
+    for unique in card_unique:
+        total = 0
+        for index, row in sorted_df.iterrows():
+            if (unique == row["Номер карты"]) & (row["Сумма операции"] < 0):
+                total = total + row["Сумма операции"]
+
+        last_digits = str(unique).replace("*", "")
+        total = round(total, 2)
+        total = abs(total)
+        cashback = total// 100
+        cashback = round(cashback, 2)
+        row = {
+            "last_digits": last_digits,
+            "total_spend": total,
+            "cashback": cashback
+        }
+        card_spend_transactions.append(row)
+
+    # card_sorted = sorted_df[
+    #     [
+    #         "Номер карты",
+    #         "Сумма операции",
+    #         "Кэшбэк",
+    #         "Сумма операции с округлением"
+    #     ]
+    # ]
+
+    # for index, row in card_sorted.iterrows():
+    #     if row["Сумма операции"] < 0:
+    #         last_digits = str(row["Номер карты"]).replace("*", "")
+    #         total_spend = row["Сумма операции с округлением"]
+    #         cashback = total_spend // 100
+    #         row = {
+    #             "last_digits": last_digits,
+    #             "total_spend": total_spend,
+    #             "cashback": cashback
+    #         }
+    #         card_spend_transactions.append(row)
 
     return card_spend_transactions
 
