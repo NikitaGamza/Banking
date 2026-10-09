@@ -1,24 +1,27 @@
+import math
 from datetime import datetime
 import pandas as pd
 import requests
 from pandas import DataFrame
 import json
-import os
 
 
 URL = "https://api.apilayer.com/exchangerates_data/convert"
-API_KEY = os.getenv("API_KEY")
+API_KEY = "Q6gcDIN8o0fPI1e3DKs4R7nMfgX4V4nZ"
+STOCK_URL = "https://api.marketstack.com/v2/eod"
+STOCK_API = "ddd29bcdcc079c153bc61b8f95a7c69e"
+# API_KEY = os.getenv("API_KEY")
 
 def get_time_for_greeting() -> str:
     """Функция возвращает «Доброе утро» / «Добрый день» /
         «Добрый вечер» / «Доброй ночи» в зависимости от текущего времени.
     """
     user_datetime_hour = datetime.now().hour
-    if 5 <= user_datetime_hour <= 12:
+    if 6 <= user_datetime_hour <= 12:
         return "Доброе утро"
     elif 12 <= user_datetime_hour <= 18:
         return "Добрый день"
-    elif 18 <= user_datetime_hour <= 24:
+    elif 18 <= user_datetime_hour <= 23:
         return "Добрый вечер"
     else:
         return "Доброй ночи"
@@ -54,25 +57,47 @@ def get_card_with_spend(sorted_df: DataFrame) -> list[dict]:
         Функция принимает DataFrame и возвращает список карт с расходами
     """
     card_spend_transactions = []
-    card_sorted = sorted_df[
-        [
-            "Номер карты",
-            "Сумма операции",
-            "Кэшбэк",
-            "Сумма операции с округлением"
-        ]
-    ]
-    for index, row in card_sorted.iterrows():
-        if row["Сумма операции"] < 0:
-            last_digits = str(row["Номер карты"]).replace("*", "")
-            total_spend = row["Сумма операции с округлением"]
-            cashback = total_spend // 100
-            row = {
-                "last_digits": last_digits,
-                "total_spend": total_spend,
-                "cashback": cashback
-            }
-            card_spend_transactions.append(row)
+
+    card_unique = sorted_df["Номер карты"].unique()
+
+    for unique in card_unique:
+        total = 0
+        for index, row in sorted_df.iterrows():
+            if (unique == row["Номер карты"]) & (row["Сумма операции"] < 0):
+                total = total + row["Сумма операции"]
+
+        last_digits = str(unique).replace("*", "")
+        total = round(total, 2)
+        total = abs(total)
+        cashback = total// 100
+        cashback = round(cashback, 2)
+        row = {
+            "last_digits": last_digits,
+            "total_spend": total,
+            "cashback": cashback
+        }
+        card_spend_transactions.append(row)
+
+    # card_sorted = sorted_df[
+    #     [
+    #         "Номер карты",
+    #         "Сумма операции",
+    #         "Кэшбэк",
+    #         "Сумма операции с округлением"
+    #     ]
+    # ]
+
+    # for index, row in card_sorted.iterrows():
+    #     if row["Сумма операции"] < 0:
+    #         last_digits = str(row["Номер карты"]).replace("*", "")
+    #         total_spend = row["Сумма операции с округлением"]
+    #         cashback = total_spend // 100
+    #         row = {
+    #             "last_digits": last_digits,
+    #             "total_spend": total_spend,
+    #             "cashback": cashback
+    #         }
+    #         card_spend_transactions.append(row)
 
     return card_spend_transactions
 
@@ -109,15 +134,12 @@ def get_currency(path_to_json: str) -> list[dict]:
         currencies = data['user_currencies']
 
         for currency in currencies:
-            params = {
-                "amount": 1,
-                "from": f"{currency}",
-                "to": "RUB"
-            }
+            params = {"from": f"{currency}", "to": "RUB", "amount": 1}
             headers = {
                 "apiKey": f"{API_KEY}",
             }
-            response = requests.request("GET", URL, headers=headers, data=params)
+            payload = {}
+            response = requests.request("GET", URL, headers=headers, data=payload, params=params)
             status_code = response.status_code
 
             if status_code == 200:
@@ -129,7 +151,7 @@ def get_currency(path_to_json: str) -> list[dict]:
                     "rate": f"{currency_amount}",
                 })
 
-        return currency_rates
+    return currency_rates
 
 
 def get_stock(path_to_json: str) -> list[dict]:
@@ -140,4 +162,17 @@ def get_stock(path_to_json: str) -> list[dict]:
         stocks = data['user_stocks']
 
         for stock in stocks:
-            pass
+            params = {"access_key": f"{STOCK_API}", "symbols": f"{stock}", "limit": 1}
+            response = requests.request("GET", STOCK_URL, params=params)
+            status_code = response.status_code
+
+            if status_code == 200:
+                result = response.json()
+                stock_code_response = result["data"][0]["symbol"]
+                stock_amount = round(result["data"][0]["open"], 2)
+                stock_rates.append({
+                    "stock": f"{stock_code_response}",
+                    "price": f"{stock_amount}",
+                })
+
+    return stock_rates
