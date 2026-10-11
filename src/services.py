@@ -1,24 +1,21 @@
 import json
+from typing import Any
 
 import pandas as pd
 from pandas import read_excel
 
 
-def anylize_cashback(file_path: str, year: int, month: int) -> dict[str, int]:
+def anylize_cashback(file_path: str, year: int, month: int) -> Any:
     """Анализирует выгодные категории кэшбэка"""
     df = read_excel(file_path)
-    df["Дата операции"] = pd.to_datetime(df["Дата операции"], format='%d.%m.%Y %H:%M:%S')
+    df["Дата операции"] = pd.to_datetime(
+        df["Дата операции"], format="%d.%m.%Y %H:%M:%S"
+    )
     filtered_data = df[
-        (df["Дата операции"].dt.year == year)
-        &
-        (df["Дата операции"].dt.month == month)
+        (df["Дата операции"].dt.year == year) & (df["Дата операции"].dt.month == month)
     ]
-    filtered_data = filtered_data[
-        (filtered_data["Кэшбэк"] > 0)
-    ]
-    filtered_data = filtered_data[
-        (filtered_data["Сумма платежа"] < 0)
-    ]
+    filtered_data = filtered_data[(filtered_data["Кэшбэк"] > 0)]
+    filtered_data = filtered_data[(filtered_data["Сумма платежа"] < 0)]
     expenses_by_category = filtered_data.groupby("Категория")["Сумма платежа"].sum()
     cashback_by_category = abs(expenses_by_category) // 100
 

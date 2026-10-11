@@ -1,20 +1,14 @@
-from datetime import datetime
 import json
-from typing import Dict, Any
-from src.utils import (
-    get_time_for_greeting,
-    get_data_time,
-    get_path_and_period,
-    get_card_with_spend,
-    get_top_transactions,
-    get_currency,
-    get_stock
-)
+from typing import Any, Dict
+
+from src.utils import (get_card_with_spend, get_currency, get_data_time,
+                       get_path_and_period, get_stock, get_time_for_greeting,
+                       get_top_transactions)
 
 
-def main_info(date_time: str) -> Dict[str, Any]:
+def main_info(date_time: str) -> Any:
     """главная функция, принимающую на вход строку с датой и временем в формате
-        YYYY-MM-DD HH:MM:SS (2018-05-20 15:30:01) и возвращающую json-ответ
+    YYYY-MM-DD HH:MM:SS (2018-05-20 15:30:01) и возвращающую json-ответ
     """
     # Сраз экселя на определённый диапазон
     time_period = get_data_time(date_time)

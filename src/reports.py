@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Optional
 
-from pandas import DataFrame
 import pandas as pd
+from pandas import DataFrame
 
-from pathlib import Path
 
-def spending_by_category(transactions: DataFrame, category: str, date: Optional[str] = None) -> pd.DataFrame:
+def spending_by_category(
+    transactions: DataFrame, category: str, date: Optional[str] = None
+) -> pd.DataFrame:
     """Функция возвращает траты по заданной категории за последние три месяца (от переданной даты)."""
     transaction_category = []
 
@@ -16,14 +18,16 @@ def spending_by_category(transactions: DataFrame, category: str, date: Optional[
         dt = datetime.strptime(date, "%d.%m.%Y %H:%M:%S")
     dt_delta = dt - timedelta(days=90)
 
-    transactions["Дата операции"] = pd.to_datetime(transactions["Дата операции"], dayfirst=True)
+    transactions["Дата операции"] = pd.to_datetime(
+        transactions["Дата операции"], dayfirst=True
+    )
     filtered_df = transactions[
-        (transactions["Дата операции"] >= dt_delta) &
-        (transactions["Дата операции"] <= dt)
-        ]
+        (transactions["Дата операции"] >= dt_delta)
+        & (transactions["Дата операции"] <= dt)
+    ]
 
     for index, row in filtered_df.iterrows():
-        if row['Категория'] == category:
+        if row["Категория"] == category:
             transaction = {
                 "date": f"{row['Дата платежа']}",
                 "amount": f"{row['Сумма операции']}",

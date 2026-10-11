@@ -1,10 +1,9 @@
-import math
+import json
 from datetime import datetime
+
 import pandas as pd
 import requests
 from pandas import DataFrame
-import json
-
 
 URL = "https://api.apilayer.com/exchangerates_data/convert"
 API_KEY = "Q6gcDIN8o0fPI1e3DKs4R7nMfgX4V4nZ"
@@ -12,9 +11,10 @@ STOCK_URL = "https://api.marketstack.com/v2/eod"
 STOCK_API = "ddd29bcdcc079c153bc61b8f95a7c69e"
 # API_KEY = os.getenv("API_KEY")
 
+
 def get_time_for_greeting() -> str:
     """Функция возвращает «Доброе утро» / «Добрый день» /
-        «Добрый вечер» / «Доброй ночи» в зависимости от текущего времени.
+    «Добрый вечер» / «Доброй ночи» в зависимости от текущего времени.
     """
     user_datetime_hour = datetime.now().hour
     if 6 <= user_datetime_hour <= 12:
@@ -26,18 +26,20 @@ def get_time_for_greeting() -> str:
     else:
         return "Доброй ночи"
 
+
 def get_data_time(date_time: str, date_format: str = "%Y-%m-%d %H:%M:%S") -> list[str]:
     dt = datetime.strptime(date_time, date_format)
     start_of_month = dt.replace(day=1)
     return [
         start_of_month.strftime("%d.%m.%Y %H:%M:%S"),
-        dt.strftime("%d.%m.%Y %H:%M:%S")
+        dt.strftime("%d.%m.%Y %H:%M:%S"),
     ]
+
 
 def get_path_and_period(path_to_file: str, period_date: list) -> DataFrame:
     """
-        Функия принимает путь к файлу, список дат (начало и конец)
-        Возвращает таблицу в указанном периоде
+    Функия принимает путь к файлу, список дат (начало и конец)
+    Возвращает таблицу в указанном периоде
     """
     df = pd.read_excel(path_to_file, sheet_name="Отчет по операциям")
 
@@ -46,15 +48,15 @@ def get_path_and_period(path_to_file: str, period_date: list) -> DataFrame:
     end_date = datetime.strptime(period_date[1], "%d.%m.%Y %H:%M:%S")
 
     filtered_df = df[
-        (df["Дата операции"] >= start_date) &
-        (df["Дата операции"] <= end_date)
+        (df["Дата операции"] >= start_date) & (df["Дата операции"] <= end_date)
     ]
     sorted_df = filtered_df.sort_values(by="Дата операции", ascending=False)
     return sorted_df
 
+
 def get_card_with_spend(sorted_df: DataFrame) -> list[dict]:
     """
-        Функция принимает DataFrame и возвращает список карт с расходами
+    Функция принимает DataFrame и возвращает список карт с расходами
     """
     card_spend_transactions = []
 
@@ -69,14 +71,10 @@ def get_card_with_spend(sorted_df: DataFrame) -> list[dict]:
         last_digits = str(unique).replace("*", "")
         total = round(total, 2)
         total = abs(total)
-        cashback = total// 100
+        cashback = total // 100
         cashback = round(cashback, 2)
-        row = {
-            "last_digits": last_digits,
-            "total_spend": total,
-            "cashback": cashback
-        }
-        card_spend_transactions.append(row)
+        row_res = {"last_digits": last_digits, "total_spend": total, "cashback": cashback}
+        card_spend_transactions.append(row_res)
 
     # card_sorted = sorted_df[
     #     [
@@ -101,18 +99,14 @@ def get_card_with_spend(sorted_df: DataFrame) -> list[dict]:
 
     return card_spend_transactions
 
+
 def get_top_transactions(sorted_df: DataFrame, get_top: int = 5) -> list[dict]:
     """Функция принимает DataFrame и возвращает get_top транзакций по сумме платежа"""
     top_pay_transactions = []
     sorted_pay_df = sorted_df.sort_values(by="Сумма операции", ascending=False)
     top_transactions = sorted_pay_df.head(get_top)
     top_transactions_sorted = top_transactions[
-        [
-            "Дата платежа",
-            "Сумма операции",
-            "Категория",
-            "Описание"
-        ]
+        ["Дата платежа", "Сумма операции", "Категория", "Описание"]
     ]
 
     for index, row in top_transactions_sorted.iterrows():
@@ -126,30 +120,35 @@ def get_top_transactions(sorted_df: DataFrame, get_top: int = 5) -> list[dict]:
 
     return top_pay_transactions
 
+
 def get_currency(path_to_json: str) -> list[dict]:
     """Функция принимает на вход path_to_json и возвращает курс валют"""
     currency_rates = []
     with open(path_to_json, "r", encoding="utf-8") as file:
         data = json.load(file)
-        currencies = data['user_currencies']
+        currencies = data["user_currencies"]
 
         for currency in currencies:
             params = {"from": f"{currency}", "to": "RUB", "amount": 1}
             headers = {
                 "apiKey": f"{API_KEY}",
             }
-            payload = {}
-            response = requests.request("GET", URL, headers=headers, data=payload, params=params)
+            payload: dict = {}
+            response = requests.request(
+                "GET", URL, headers=headers, data=payload, params=params
+            )
             status_code = response.status_code
 
             if status_code == 200:
                 result = response.json()
                 currency_code_response = result["query"]["from"]
                 currency_amount = round(result["result"], 2)
-                currency_rates.append({
-                    "currency": f"{currency_code_response}",
-                    "rate": f"{currency_amount}",
-                })
+                currency_rates.append(
+                    {
+                        "currency": f"{currency_code_response}",
+                        "rate": f"{currency_amount}",
+                    }
+                )
 
     return currency_rates
 
@@ -159,7 +158,7 @@ def get_stock(path_to_json: str) -> list[dict]:
     stock_rates = []
     with open(path_to_json, "r", encoding="utf-8") as file:
         data = json.load(file)
-        stocks = data['user_stocks']
+        stocks = data["user_stocks"]
 
         for stock in stocks:
             params = {"access_key": f"{STOCK_API}", "symbols": f"{stock}", "limit": 1}
@@ -170,9 +169,11 @@ def get_stock(path_to_json: str) -> list[dict]:
                 result = response.json()
                 stock_code_response = result["data"][0]["symbol"]
                 stock_amount = round(result["data"][0]["open"], 2)
-                stock_rates.append({
-                    "stock": f"{stock_code_response}",
-                    "price": f"{stock_amount}",
-                })
+                stock_rates.append(
+                    {
+                        "stock": f"{stock_code_response}",
+                        "price": f"{stock_amount}",
+                    }
+                )
 
     return stock_rates
